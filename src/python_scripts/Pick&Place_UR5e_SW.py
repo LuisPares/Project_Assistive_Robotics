@@ -1,40 +1,42 @@
-from robodk import robolink, robomath
-from robodk.robomath import radians, degrees
 import time
+from math import radians, degrees, pi
+from robodk.robolink import Robolink
+from robodk.robomath import *
+
 
 # Robot setup
-RDK = robolink.Robolink()
+RDK = Robolink()
 robot = RDK.Item('UR5e')
 base = RDK.Item('UR5e Base')
 tool = RDK.Item('2FG7')
 Init_target = RDK.Item('Init')
-pick_target = RDK.Item('Pick')
-App_target = RDK.Item('App')
+App_pick_target = RDK.Item('App_Pick')
+Pick_target = RDK.Item('Pick')
+App_place_target = RDK.Item('App_Place')
 Place_target = RDK.Item('Place')
-App_place_target = RDK.Item('App Place')
-cube = RDK.Item('Cube')
 table = RDK.Item('Table')
+cube = RDK.Item('cube')
 cube.setVisible(False)
-cube_pose = RDK.Item('Pose')
-cube_pose.setParent(table)
-cube_pose.setPose(cube_pose.Pose())
-cube.setPose(cube_pose.Pose())
+cube_POSE = Pick_target.Pose()
+cube.setParent(table) #Do not maintain the actual absolute POSE
+cube.setPose(cube_POSE)
 cube.setVisible(True)
 
 robot.setPoseFrame(base)
 robot.setPoseTool(tool)
+robot.setSpeed(20)
 
 def Init():
-    robot.MoveJ(Init_target, True)
     print("Init")
+    robot.MoveL(Init_target, True)
+    print("Init_target REACHED")
 
 def Pick():
-    robot.MoveJ(pick_target, True)
     print("Pick")
 
     ...
-    cube.setParentStatic(tool#Maintain the relative
-    robot.MoveL(App_static_tool_target, True)
+    cube.setParentStatic(tool) #Maintain the actual absolute POSE
+    robot.MoveL(App_pick_target, True)
     print("Pick FINISHED")
 
 def Place():                                                                                                                                                                                                                                                                                def main():                                                                Init()                                                                 Pick()                                                                 Place()                                                                                                                                   if __main__=="__main__":                                                   main()                                                                               
