@@ -1,42 +1,64 @@
 import time
+import os
 from math import radians, degrees, pi
-from robodk.robolink import Robolink
+from robodk.robolink import *
 from robodk.robomath import *
 
 
-# Robot setup
-RDK = Robolink()
-robot = RDK.Item('UR5e')
-base = RDK.Item('UR5e Base')
-tool = RDK.Item('2FG7')
-Init_target = RDK.Item('Init')
-App_pick_target = RDK.Item('App_Pick')
-Pick_target = RDK.Item('Pick')
-App_place_target = RDK.Item('App_Place')
-Place_target = RDK.Item('Place')
-table = RDK.Item('Table')
-cube = RDK.Item('cube')
-cube.setVisible(False)
-cube_POSE = Pick_target.Pose()
-cube.setParent(table) #Do not maintain the actual absolute POSE
-cube.setPose(cube_POSE)
-cube.setVisible(True)
+# Define relative path to the .rdk file
+relative_path = "src/roboDK/Pick&Place_UR5e.rdk"
+SPEED = 20
 
+# Start RoboDK with the project file
+RDK = Robolink()
+RDK.AddFile(os.path.abspath(relative_path))
+
+# Retrieve items from the RoboDK station
+robot     = RDK.Item("UR5e")
+tool      = RDK.Item("2FG7")
+base      = RDK.Item("UR5e Base")
+init_t    = RDK.Item("Init") #Traget del RoboDK
+#app_pick  = RDK.Item("App_Pick")
+pick_t    = RDK.Item("Pick") #Traget del RoboDK
+#app_place = RDK.Item("App_Place")
+place_t   = RDK.Item("Place") #Traget del RoboDK
+table     = RDK.Item("Table")
+cube      = RDK.Item("cube")
+
+# Hide the cube initially
+cube.setVisible(False)
+
+# Set cube pose and parent
+cube.setParent(table) #Do not maintain the actual absolute POSE
+cube.setPose(pick_t.Pose())
+
+# Set robot frame, tool and speed
 robot.setPoseFrame(base)
 robot.setPoseTool(tool)
-robot.setSpeed(20)
+robot.setSpeed(SPEED)
 
+# Move to initial position and show cube
 def Init():
-    print("Init")
-    robot.MoveL(Init_target, True)
+    print("Init")    
+    robot.MoveL(init_t, True)
     print("Init_target REACHED")
+    cube.setVisible(True)
 
 def Pick():
     print("Pick")
-
-    ...
-    cube.setParentStatic(tool) #Maintain the actual absolute POSE
-    robot.MoveL(App_pick_target, True)
+    robot.MoveL(pick_t)     # Mover robot al objeto
+    cube.setParentStatic(tool)
+    robot.MoveL(init_t)    # Mover robot a la posicion inicial
     print("Pick FINISHED")
 
-def Place():                                                                                                                                                                                                                                                                                def main():                                                                Init()                                                                 Pick()                                                                 Place()                                                                                                                                   if __main__=="__main__":                                                   main()                                                                               
+def Place():     
+                                                                             
+
+def main():
+    Init()
+    Pick()
+    Place()
+
+# Run main and handle closing
+if __name__ == "__main__":
+    main()
