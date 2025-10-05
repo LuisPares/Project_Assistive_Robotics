@@ -52,7 +52,11 @@ def Pick():
     print("Pick FINISHED")
 
 def Place():     
-                                                                             
+    print("Place")
+    robot.MoveL(place_t)
+    cube.setParentStatic(table)
+    robot.MoveL(init_t)    
+    print("Place FINISHED")                                                                             
 
 def main():
     Init()
