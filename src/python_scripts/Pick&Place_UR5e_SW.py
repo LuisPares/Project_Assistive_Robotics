@@ -11,7 +11,11 @@ SPEED = 20
 
 # Start RoboDK with the project file
 RDK = Robolink()
+time.sleep(3)  # Wait for RoboDK to initialize
+
 RDK.AddFile(os.path.abspath(relative_path))
+
+time.sleep(2)  # Wait for the project to load
 
 # Retrieve items from the RoboDK station
 robot     = RDK.Item("UR5e")
