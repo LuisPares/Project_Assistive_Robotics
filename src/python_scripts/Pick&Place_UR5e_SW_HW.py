@@ -1,5 +1,7 @@
 import time
 import os
+import tkinter as tk
+from tkinter import messagebox
 from math import radians, degrees, pi
 from robodk.robolink import *
 from robodk.robomath import *
@@ -11,7 +13,10 @@ SPEED = 20
 
 # Start RoboDK with the project file
 RDK = Robolink()
+time.sleep(3)  # Wait for RoboDK to initialize
+
 RDK.AddFile(os.path.abspath(relative_path))
+time.sleep(2)  # Wait for the project to load
 
 # Retrieve items from the RoboDK station
 robot     = RDK.Item("UR5e")
@@ -37,6 +42,23 @@ robot.setPoseFrame(base)
 robot.setPoseTool(tool)
 robot.setSpeed(SPEED)
 
+# Connect to real robot or simulate
+def robot_online(online):
+    print("Connecting to UR5e...")
+    if online:
+        robot.setConnectionParams('192.168.1.5', 30000, '/', 'anonymous', '')
+        time.sleep(5)
+        success = robot.ConnectSafe('192.168.1.5')
+        time.sleep(5)
+        status, status_msg = robot.ConnectedState()
+        if status != ROBOTCOM_READY:
+            raise Exception("Failed to connect: " + status_msg)
+        RDK.setRunMode(RUNMODE_RUN_ROBOT)
+        print("Connection to UR5e Successful!")
+    else:
+        RDK.setRunMode(RUNMODE_SIMULATE)
+        print("Simulation mode activated.")
+
 # Move to initial position and show cube
 def Init():
     print("Init")    
@@ -56,9 +78,27 @@ def Place():
     robot.MoveL(place_t)
     cube.setParentStatic(table)
     robot.MoveL(init_t)    
-    print("Place FINISHED")                                                                             
+    print("Place FINISHED")
+
+# Confirmation dialog to close RoboDK
+def confirm_close():
+    root = tk.Tk()
+    root.withdraw()
+    response = messagebox.askquestion(
+        "Close RoboDK",
+        "Do you want to save changes before closing RoboDK?",
+        icon='question'
+    )
+    if response == 'yes':
+        RDK.Save()
+        RDK.CloseRoboDK()
+        print("RoboDK saved and closed.")
+    else:
+        RDK.CloseRoboDK()
+        print("RoboDK closed without saving.")
 
 def main():
+    robot_online(False)  # True for real robot, False for simulation
     Init()
     Pick()
     Place()
