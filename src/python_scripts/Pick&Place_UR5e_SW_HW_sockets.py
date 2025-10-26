@@ -10,13 +10,16 @@ from robodk.robomath import *
 
 # Define relative path to the .rdk file
 relative_path = "src/roboDK/Pick&Place_UR5e.rdk"
+APP_SPEED = 180
 SPEED = 20
 
 # Start RoboDK with the project file
 RDK = Robolink()
-time.sleep(3)  # Wait for RoboDK to initialize
+print("Loading RoboDK...")
+time.sleep(5)  # Wait for RoboDK to initialize
 
 RDK.AddFile(os.path.abspath(relative_path))
+print("Loading RoboDK Project...")
 time.sleep(2)  # Wait for the project to load
 
 # Retrieve items from the RoboDK station
@@ -24,15 +27,12 @@ robot     = RDK.Item("UR5e")
 tool      = RDK.Item("2FG7")
 base      = RDK.Item("UR5e Base")
 init_t    = RDK.Item("Init") #Traget del RoboDK
-#app_pick  = RDK.Item("App_Pick")
+app_pick  = RDK.Item("App_Pick") #Traget del RoboDK
 pick_t    = RDK.Item("Pick") #Traget del RoboDK
-#app_place = RDK.Item("App_Place")
+app_place = RDK.Item("App_Place") #Traget del RoboDK
 place_t   = RDK.Item("Place") #Traget del RoboDK
 table     = RDK.Item("Table")
 cube      = RDK.Item("cube")
-
-# Hide the cube initially
-cube.setVisible(False)
 
 # Set cube pose and parent
 cube.setParent(table) #Do not maintain the actual absolute POSE
@@ -53,13 +53,17 @@ timej = 6
 timel = 4
 
 # URScript commands
+def joints_to_move(target):
+    j1, j2, j3, j4, j5, j6 = np.radians(target.Joints()).tolist()[0]
+    return f"movej([{j1},{j2},{j3},{j4},{j5},{j6}],{accel_mss},{speed_ms},{timel},{blend_r})"
+
 set_tcp = "set_tcp(p[0.000000, 0.000000, 0.050000, 0.000000, 0.000000, 0.000000])"
-j1, j2, j3, j4, j5, j6 = np.radians(init_t.Joints()).tolist()[0]
-movej_init = f"movej([{j1},{j2}, {j3}, {j4}, {j5}, {j6}],{accel_mss},{speed_ms},{timel},{blend_r})"
-j1, j2, j3, j4, j5, j6 = np.radians(pick_t.Joints()).tolist()[0]
-movej_pick = f"movej([{j1},{j2}, {j3}, {j4}, {j5}, {j6}],{accel_mss},{speed_ms},{timel},{blend_r})"
-j1, j2, j3, j4, j5, j6 = np.radians(place_t.Joints()).tolist()[0]
-movej_place = f"movej([{j1},{j2}, {j3}, {j4}, {j5}, {j6}],{accel_mss},{speed_ms},{timel},{blend_r})"
+movej_init      = joints_to_move(init_t)
+movej_app_pick  = joints_to_move(app_pick)
+movej_pick      = joints_to_move(pick_t)
+movej_app_place = joints_to_move(app_place)
+movej_place     = joints_to_move(place_t)
+
 
 # Check robot connection
 def check_robot_port(ip, port):
@@ -101,17 +105,45 @@ def Init():
 
 def Pick():
     print("Pick")
+    robot.setSpeed(APP_SPEED)
+    robot.MoveL(app_pick)  # Mover robot a la posicion de aproximacion
+    robot.setSpeed(SPEED)
     robot.MoveL(pick_t)     # Mover robot al objeto
     cube.setParentStatic(tool)
-    robot.MoveL(init_t)    # Mover robot a la posicion inicial
+    robot.setSpeed(APP_SPEED)
+    robot.MoveL(app_pick)
     print("Pick FINISHED")
+    
+    if robot_is_connected and UR5e_execution:
+        print("Pick REAL UR5e")
+        send_ur_script(joints_to_move(app_pick))
+        receive_response(timel)
+        send_ur_script(joints_to_move(pick_t))
+        receive_response(timel)
+        send_ur_script(joints_to_move(app_pick))
+        receive_response(timel)
 
 def Place():     
     print("Place")
+    robot.setSpeed(APP_SPEED)
+    robot.MoveL(app_place)
+    robot.setSpeed(SPEED)
     robot.MoveL(place_t)
     cube.setParentStatic(table)
-    robot.MoveL(init_t)    
+    robot.setSpeed(APP_SPEED)
+    robot.MoveL(app_place)
+    robot.MoveL(init_t)
     print("Place FINISHED")  
+    if robot_is_connected and UR5e_execution:
+        print("Place REAL UR5e")
+        send_ur_script(joints_to_move(app_place))
+        receive_response(timel)
+        send_ur_script(joints_to_move(place_t))
+        receive_response(timel)
+        send_ur_script(joints_to_move(app_place))
+        receive_response(timel)
+        send_ur_script(joints_to_move(init_t))
+        receive_response(timel)
 
 # Confirmation dialog to close RoboDK
 def confirm_close():
