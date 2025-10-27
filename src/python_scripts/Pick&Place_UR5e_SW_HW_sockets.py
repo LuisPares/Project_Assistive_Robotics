@@ -44,7 +44,7 @@ robot.setPoseTool(tool)
 robot.setSpeed(SPEED)
 
 # Robot Constants
-ROBOT_IP = '192.168.1.5'
+ROBOT_IP = '192.168.1.4'
 ROBOT_PORT = 30002
 accel_mss = 1.2
 speed_ms = 0.75
