@@ -55,7 +55,7 @@ timel = 4
 # URScript commands
 def joints_to_move(target):
     j1, j2, j3, j4, j5, j6 = np.radians(target.Joints()).tolist()[0]
-    return f"movej([{j1},{j2},{j3},{j4},{j5},{j6}],{accel_mss},{speed_ms},{timel},{blend_r})"
+    return f"movel([{j1},{j2},{j3},{j4},{j5},{j6}],{accel_mss},{speed_ms},{timel},{blend_r})"
 
 set_tcp = "set_tcp(p[0.000000, 0.000000, 0.050000, 0.000000, 0.000000, 0.000000])"
 movej_init      = joints_to_move(init_t)
